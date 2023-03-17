@@ -40,6 +40,12 @@ int main(void)
 	std::string albumName;
 	std::cout << "Welcome to Gallery!" << std::endl;
 	std::cout << "===================" << std::endl;
+	// Get the current time and converete to string
+	time_t now = time(0);
+	char* st = ctime(&now);
+	std::cout << "Developer: Shahar" << std::endl << "Time and Date: " << st;
+	std::cout << "===================" << std::endl;
+
 	std::cout << "Type " << HELP << " to a list of all supported commands" << std::endl;
 	
 	do {
