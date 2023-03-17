@@ -15,7 +15,10 @@ void MemoryAccess::printAlbums()
 	std::cout << "-----------" << std::endl;
 	for (const Album& album: m_albums) 	{
 
-		std::cout << album.getCreationDate() << std::setw(5) << "* " << album;
+		if(this->doesUserExists(album.getOwnerId()))//check if user is still exist
+		{
+			std::cout << album.getCreationDate() << std::setw(5) << "* " << album;
+		}
 	}
 }
 
