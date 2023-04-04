@@ -91,13 +91,108 @@ void DatabaseAccess::clear()
 }
 
 
+//call backs
+int callback(void* data, int argc, char** argv, char** azColName)
+{
+	for (int i = 0; i < argc; i++)
+	{
+		//this if is to avoid "," at the end of each line
+		if (i != argc - 1)
+		{
+			std::cout << azColName[i] << " = " << argv[i] << " , ";
+		}
+		else
+		{
+			std::cout << azColName[i] << " = " << argv[i];
+		}
+	}
+	std::cout << std::endl;
+	return 0;
+}
+
+int callbackAlbums(void* data, int argc, char** argv, char** azColName)
+{
+	Album album;
+
+	for (int i = 0; i < argc; i++)
+	{
+		if (string(azColName[i]) == "NAME")
+		{
+			album.setName(std::string(argv[i]));
+		}
+		else if (string(azColName[i]) == "CREATION_DATE")
+		{
+			album.setCreationDate(std::string(argv[i]));
+		}
+		else if (string(azColName[i]) == "USER_ID")
+		{
+			album.setOwner(atoi(argv[i]));
+		}
+	}
+
+	std::list<Album>* albums = (std::list<Album>*)data;
+	albums->push_back(album);
+
+	return 0;
+}
+
+int callbackAlbum(void* data, int argc, char** argv, char** azColName)
+{
+	Album* album = (Album*)data;
+
+	for (int i = 0; i < argc; i++)
+	{
+		if (string(azColName[i]) == "NAME")
+		{
+			album->setName(std::string(argv[i]));
+		}
+		else if (string(azColName[i]) == "CREATION_DATE")
+		{
+			album->setCreationDate(std::string(argv[i]));
+		}
+		else if (string(azColName[i]) == "USER_ID")
+		{
+			album->setOwner(atoi(argv[i]));
+		}
+	}
+
+	return 0;
+}
+
+int callbackDoesExist(void* data, int argc, char** argv, char** azColName)
+{
+	string* str = (string*)data;
+
+	str->assign(string(argv[0]));
+
+	return 0;
+}
+
+int callbackPictureId(void* data, int argc, char** argv, char** azColName)
+{
+	int id;
+
+	for (int i = 0; i < argc; i++)
+	{
+		if (string(azColName[i]) == "PICTURE_ID")
+		{
+			id = (int)argv[i];
+		}
+	}
+
+	std::list<int>* ids = (std::list<int>*)data;
+	ids->push_back(id);
+
+	return 0;
+}
+
 //HELP
 Picture DatabaseAccess::getPictureFromID(const int picture_id)
 {
 	string picture_name = "";
 	string sqlStatement = "SELECT NAME FROM USERS WHERE PICTURE.ID = " + std::to_string(picture_id) + ";";
 	char* errMessage = nullptr;
-	int res = sqlite3_exec(db, sqlStatement.c_str(), callbackUserName, &picture_name, &errMessage);
+	int res = sqlite3_exec(db, sqlStatement.c_str(), callbackDoesExist, &picture_name, &errMessage);
 	if (res != SQLITE_OK) {
 		throw MyException(errMessage);
 	}
@@ -105,7 +200,7 @@ Picture DatabaseAccess::getPictureFromID(const int picture_id)
 	string location = "";
 	sqlStatement = "SELECT LOCATION FROM USERS WHERE PICTURE.ID = " + std::to_string(picture_id) + ";";
 	errMessage = nullptr;
-	res = sqlite3_exec(db, sqlStatement.c_str(), callbackUserName, &location, &errMessage);
+	res = sqlite3_exec(db, sqlStatement.c_str(), callbackDoesExist, &location, &errMessage);
 	if (res != SQLITE_OK) {
 		throw MyException(errMessage);
 	}
@@ -113,7 +208,7 @@ Picture DatabaseAccess::getPictureFromID(const int picture_id)
 	string creation_date = "";
 	sqlStatement = "SELECT CREATION_DATE FROM USERS WHERE PICTURE.ID = " + std::to_string(picture_id) + ";";
 	errMessage = nullptr;
-	res = sqlite3_exec(db, sqlStatement.c_str(), callbackUserName, &creation_date, &errMessage);
+	res = sqlite3_exec(db, sqlStatement.c_str(), callbackDoesExist, &creation_date, &errMessage);
 	if (res != SQLITE_OK) {
 		throw MyException(errMessage);
 	}
@@ -415,14 +510,14 @@ bool DatabaseAccess::doesUserExists(int userId)
 User DatabaseAccess::getUser(int userId)
 {
 	string name;
-	string sqlStatement = "SELECT * FROM ALBUMS WHERE ID = " + std::to_string(userId) + ";";
+	string sqlStatement = "SELECT NAME FROM USERS WHERE ID = " + std::to_string(userId) + ";";
 	char* errMessage = nullptr;
-	int res = sqlite3_exec(db, sqlStatement.c_str(), callbackUserName, &name, &errMessage);
+	int res = sqlite3_exec(db, sqlStatement.c_str(), callbackDoesExist, &name, &errMessage);
 	if (res != SQLITE_OK) {
 		throw MyException(errMessage);
 	}
 
-	if (name == "")
+	if (name.size() < 1)
 	{
 		throw MyException("User Does Not Exist");
 		return User(0,"0");
@@ -520,16 +615,24 @@ User DatabaseAccess::getTopTaggedUser()
 		throw MyException(errMessage);
 	}
 
-	string user_name = "";
-	sqlStatement = "SELECT NAME FROM USERS WHERE USERS.ID = " + std::to_string(stoi(user_id)) + ";";
-	errMessage = nullptr;
-	res = sqlite3_exec(db, sqlStatement.c_str(), callbackUserName, &user_name, &errMessage);
-	if (res != SQLITE_OK) {
-		throw MyException(errMessage);
-	}
+	if (user_id != "")
+	{
+		string user_name = "";
+		sqlStatement = "SELECT NAME FROM USERS WHERE USERS.ID = " + std::to_string(stoi(user_id)) + ";";
+		errMessage = nullptr;
+		res = sqlite3_exec(db, sqlStatement.c_str(), callbackDoesExist, &user_name, &errMessage);
+		if (res != SQLITE_OK) {
+			throw MyException(errMessage);
+		}
 
-	User user(stoi(user_id), user_name);
-	return user;
+		User user(stoi(user_id), user_name);
+		return user;
+	}
+	else
+	{
+		User user(-999, "no one tagged");
+		return user;
+	}
 }
 
 Picture DatabaseAccess::getTopTaggedPicture()
@@ -542,7 +645,15 @@ Picture DatabaseAccess::getTopTaggedPicture()
 		throw MyException(errMessage);
 	}
 
-	return getPictureFromID(stoi(picture_id));
+	if (picture_id != "")
+	{
+		return getPictureFromID(stoi(picture_id));
+	}
+	else
+	{
+		Picture picture(-999, "no one tagged");
+		return picture;
+	}
 }
 
 std::list<Picture> DatabaseAccess::getTaggedPicturesOfUser(const User& user)
