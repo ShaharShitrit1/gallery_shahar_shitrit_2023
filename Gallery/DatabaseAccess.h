@@ -1,12 +1,9 @@
 #pragma once
-#include <list>
-#include "Album.h"
-#include "User.h"
+#include "CallBacks.hpp"
 #include "IDataAccess.h"
 #include "sqlite3.h"
 
 #include <io.h>
-#include <string>
 
 using std::string;
 
@@ -54,6 +51,10 @@ public:
 	void close() override;
 	void clear() override;
 
+	//HELP
+	Picture getPictureFromID(const int picture_id);
+
 private:
 	sqlite3* db;
+
 };
