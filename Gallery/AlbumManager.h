@@ -36,6 +36,8 @@ private:
 	void removePictureFromAlbum();
 	void listPicturesInAlbum();
 	void showPicture();
+	void showPictureInPaint(Picture pic);
+	void showPictureInIrfanview(Picture pic);
 
 	// tags related
 	void tagUserInPicture();

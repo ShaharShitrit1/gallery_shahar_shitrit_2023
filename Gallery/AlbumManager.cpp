@@ -3,7 +3,28 @@
 #include "Constants.h"
 #include "MyException.h"
 #include "AlbumNotOpenException.h"
+#include <windows.h>
 
+HANDLE g_paintProcessHandle = nullptr;
+
+// Handler function to close the Paint process when the user types Ctrl+C
+BOOL WINAPI ConsoleCtrlHandler(DWORD dwCtrlType)
+{
+	if (dwCtrlType == CTRL_CLOSE_EVENT && g_paintProcessHandle != nullptr)
+	{
+		// Close the Paint process
+		TerminateProcess(g_paintProcessHandle, 0);
+
+		// Reset the global handle to null
+		g_paintProcessHandle = nullptr;
+
+		std::cout << "Paint process closed." << std::endl;
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
 
 AlbumManager::AlbumManager(IDataAccess& dataAccess) :
     m_dataAccess(dataAccess), m_nextPictureId(100), m_nextUserId(200)
@@ -189,6 +210,94 @@ void AlbumManager::listPicturesInAlbum()
 	std::cout << std::endl;
 }
 
+void AlbumManager::showPictureInPaint(Picture pic)
+{
+	std::string path = pic.getPath();
+	std::wstring wideStr(path.begin(), path.end());  // Convert to a wide string
+	const wchar_t* filePath = wideStr.c_str();
+
+	// The path to the Paint executable
+	const wchar_t* paintPath = L"C:\\Users\\test0\\AppData\\Local\\Microsoft\\WindowsApps\\mspaint.exe";
+
+	// Create the command-line arguments to open the file with Paint
+	wchar_t commandLine[MAX_PATH + 32] = { 0 };
+	swprintf_s(commandLine, L"\"%s\" \"%s\"", paintPath, filePath);
+
+	// Start Paint with the picture file as an argument
+	STARTUPINFO startupInfo = { sizeof(startupInfo) };
+	PROCESS_INFORMATION processInfo;
+	if (!CreateProcessW(paintPath,
+		commandLine,
+		NULL,
+		NULL,
+		FALSE,
+		0,
+		NULL,
+		NULL,
+		(LPSTARTUPINFOW)&startupInfo,
+		&processInfo))
+	{
+		MessageBoxW(NULL, L"Failed to start Paint.", L"Error", MB_OK | MB_ICONERROR);
+	}
+	else
+	{
+		if (!SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE))
+		{
+			std::cerr << "Failed to register console control handler.\n";
+		}
+
+		// Wait for Paint to exit
+		WaitForSingleObject(processInfo.hProcess, INFINITE);
+
+		// Close the process and thread handles
+		CloseHandle(processInfo.hProcess);
+	}
+}
+
+void AlbumManager::showPictureInIrfanview(Picture pic)
+{
+	std::string path = pic.getPath();
+	std::wstring wideStr(path.begin(), path.end());  // Convert to a wide string
+	const wchar_t* filePath = wideStr.c_str();
+
+	// The path to the Paint executable
+	const wchar_t* paintPath = L"C:\\Program Files\\IrfanView\\i_view64.exe";
+
+	// Create the command-line arguments to open the file with Paint
+	wchar_t commandLine[MAX_PATH + 32] = { 0 };
+	swprintf_s(commandLine, L"\"%s\" \"%s\"", paintPath, filePath);
+
+	// Start Paint with the picture file as an argument
+	STARTUPINFO startupInfo = { sizeof(startupInfo) };
+	PROCESS_INFORMATION processInfo;
+	if (!CreateProcessW(paintPath,
+		commandLine,
+		NULL,
+		NULL,
+		FALSE,
+		0,
+		NULL,
+		NULL,
+		(LPSTARTUPINFOW)&startupInfo,
+		&processInfo))
+	{
+		MessageBoxW(NULL, L"Failed to start Paint.", L"Error", MB_OK | MB_ICONERROR);
+	}
+	else
+	{
+		if (!SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE))
+		{
+			std::cerr << "Failed to register console control handler.\n";
+		}
+
+		// Wait for Paint to exit
+		WaitForSingleObject(processInfo.hProcess, INFINITE);
+
+		// Close the process and thread handles
+		CloseHandle(processInfo.hProcess);
+	}
+}
+
 void AlbumManager::showPicture()
 {
 	refreshOpenAlbum();
@@ -203,10 +312,20 @@ void AlbumManager::showPicture()
 		throw MyException("Error: Can't open <" + picName+ "> since it doesnt exist on disk.\n");
 	}
 
-	// Bad practice!!!
-	// Can lead to privileges escalation
-	// You will replace it on WinApi Lab(bonus)
-	system(pic.getPath().c_str()); 
+	std::cout << "ENTER 1 to see the picture in paint\nENTER 2 to see the picture in irfanview" << std::endl;
+	std::string procNum = getInputFromConsole("Enter (1/2): ");
+	if (procNum == "1")
+	{
+		showPictureInPaint(pic);
+	}
+	else if (procNum == "2")
+	{
+		showPictureInIrfanview(pic);
+	}
+	else
+	{
+		std::cout << "Error: Wrong Input" << std::endl;
+	}
 }
 
 void AlbumManager::tagUserInPicture()

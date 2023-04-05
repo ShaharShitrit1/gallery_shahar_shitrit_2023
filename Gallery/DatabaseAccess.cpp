@@ -463,7 +463,7 @@ void DatabaseAccess::removePictureFromAlbumByName(const std::string& albumName, 
 
 	if(album_id == ""){ throw MyException("Album does not exist"); }
 
-	sqlStatement = "DELETE FROM PICTURES WHERE NAME = '" + pictureName + "' AND ALBUM_ID = " + album_id + ");";
+	sqlStatement = "DELETE FROM PICTURES WHERE NAME = '" + pictureName + "' AND ALBUM_ID = " + album_id + ";";
 	errMessage = nullptr;
 	res = sqlite3_exec(db, sqlStatement.c_str(), nullptr, nullptr, &errMessage);
 	if (res != SQLITE_OK) {
