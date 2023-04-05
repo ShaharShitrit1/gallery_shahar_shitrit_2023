@@ -1,7 +1,7 @@
 #include "DataAccessTest.h"
 #include "ItemNotFoundException.h"
 
-bool DataAccessTest::open()
+bool DataAccessTest::opendb()
 {
     return dbAccess->open();
 }
@@ -27,4 +27,10 @@ void DataAccessTest::UpdateOneUser()
         std::cout << errMessage << std::endl;
         throw MyException(errMessage);
     }
+}
+
+void DataAccessTest::DeleteOneUser()
+{
+    User user3(3, "hello");
+    dbAccess->deleteUser(user3);
 }

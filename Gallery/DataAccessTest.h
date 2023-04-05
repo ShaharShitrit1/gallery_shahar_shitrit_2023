@@ -6,7 +6,7 @@ class DataAccessTest
 public:
 
 	//open new database
-	bool open() override;
+	bool opendb();
 
 	//add three new users
 	void AddThreeUsers();
@@ -15,7 +15,7 @@ public:
 	void UpdateOneUser();
 
 	//delete one of the users
-	bool DeleteOneUser();
+	void DeleteOneUser();
 
 private:
 	DatabaseAccess* dbAccess;

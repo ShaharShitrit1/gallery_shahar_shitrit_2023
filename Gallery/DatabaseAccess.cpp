@@ -329,6 +329,8 @@ void DatabaseAccess::deleteAlbum(const std::string& albumName, int userId)
 			if (res != SQLITE_OK) {
 				throw MyException(errMessage);
 			}
+
+			delete(&picture);
 		}
 
 		//delete the album
@@ -544,7 +546,11 @@ void DatabaseAccess::deleteUser(const User& user)
 		for (auto album : albums)
 		{
 			deleteAlbum(album.getName(), user.getId());
+
+			delete(&album);
 		}
+
+		delete(&user);
 	}
 	else
 	{
