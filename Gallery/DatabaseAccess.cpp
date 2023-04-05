@@ -534,6 +534,7 @@ void DatabaseAccess::deleteUser(const User& user)
 {
 	if (doesUserExists(user.getId()))
 	{
+		//delete user from users
 		string sqlStatement = "DELETE FROM USERS WHERE USERS.ID = " + std::to_string(user.getId()) + ";";
 		char* errMessage = nullptr;
 		int res = sqlite3_exec(db, sqlStatement.c_str(), nullptr, nullptr, &errMessage);
@@ -548,6 +549,14 @@ void DatabaseAccess::deleteUser(const User& user)
 			deleteAlbum(album.getName(), user.getId());
 
 			delete(&album);
+		}
+		
+		//delete user tags
+		sqlStatement = "DELETE FROM TAGS WHERE USER_ID = " + std::to_string(user.getId()) + ";";
+		errMessage = nullptr;
+		res = sqlite3_exec(db, sqlStatement.c_str(), nullptr, nullptr, &errMessage);
+		if (res != SQLITE_OK) {
+			throw MyException(errMessage);
 		}
 
 		delete(&user);
