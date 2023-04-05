@@ -1,7 +1,7 @@
 #pragma once
 #include "DatabaseAccess.h"
 
-class DataAccessTest : public DatabaseAccess
+class DataAccessTest
 {
 public:
 
@@ -9,11 +9,14 @@ public:
 	bool open() override;
 
 	//add three new users
-	bool AddThreeUsers();
+	void AddThreeUsers();
 
 	//update a user that entered wrong name
-	bool UpdateOneUser();
+	void UpdateOneUser();
 
 	//delete one of the users
 	bool DeleteOneUser();
+
+private:
+	DatabaseAccess* dbAccess;
 };
