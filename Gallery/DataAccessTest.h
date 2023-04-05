@@ -1,9 +1,13 @@
 #pragma once
 #include "DatabaseAccess.h"
 
-class DataAccessTest
+class DataAccessTest : public DatabaseAccess
 {
 public:
+
+	//c'tor and d'tor
+	DataAccessTest() = default;
+	~DataAccessTest() = default;
 
 	//open new database
 	bool opendb();
@@ -16,7 +20,4 @@ public:
 
 	//delete one of the users
 	void DeleteOneUser();
-
-private:
-	DatabaseAccess* dbAccess;
 };

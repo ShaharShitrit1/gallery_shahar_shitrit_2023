@@ -88,6 +88,7 @@
     <ClInclude Include="Album.h" />
     <ClInclude Include="AlbumManager.h" />
     <ClInclude Include="AlbumNotOpenException.h" />
+    <ClInclude Include="DataAccessTest.h" />
     <ClInclude Include="DatabaseAccess.h" />
     <ClInclude Include="IDataAccess.h" />
     <ClInclude Include="ItemNotFoundException.h" />
@@ -101,6 +102,7 @@
   <ItemGroup>
     <ClCompile Include="Album.cpp" />
     <ClCompile Include="AlbumManager.cpp" />
+    <ClCompile Include="DataAccessTest.cpp" />
     <ClCompile Include="DatabaseAccess.cpp" />
     <ClCompile Include="MemoryAccess.cpp" />
     <ClCompile Include="Picture.cpp" />

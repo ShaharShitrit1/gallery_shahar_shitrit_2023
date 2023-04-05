@@ -3,7 +3,7 @@
 
 bool DataAccessTest::opendb()
 {
-    return dbAccess->open();
+    return DatabaseAccess::open();
 }
 
 void DataAccessTest::AddThreeUsers()
@@ -12,9 +12,9 @@ void DataAccessTest::AddThreeUsers()
     User user2(2, "my femily");
     User user3(3, "hello");
 
-    dbAccess->createUser(user1);
-    dbAccess->createUser(user2);
-    dbAccess->createUser(user3);
+    if (!DatabaseAccess::doesUserExists(user1.getId())) { DatabaseAccess::createUser(user1); }
+    if (!DatabaseAccess::doesUserExists(user2.getId())) { DatabaseAccess::createUser(user2); }
+    if (!DatabaseAccess::doesUserExists(user3.getId())) { DatabaseAccess::createUser(user3); }
 }
 
 void DataAccessTest::UpdateOneUser()
@@ -22,7 +22,7 @@ void DataAccessTest::UpdateOneUser()
     string sqlStatement = "UPDATE USERS SET NAME = 'My Family' WHERE NAME = 'my femily';";
 
     char* errMessage = nullptr;
-    int res = sqlite3_exec(dbAccess->getDB(), sqlStatement.c_str(), nullptr, nullptr, &errMessage);
+    int res = sqlite3_exec(DatabaseAccess::getDB(), sqlStatement.c_str(), nullptr, nullptr, &errMessage);
     if (res != SQLITE_OK) {
         std::cout << errMessage << std::endl;
         throw MyException(errMessage);
@@ -32,5 +32,5 @@ void DataAccessTest::UpdateOneUser()
 void DataAccessTest::DeleteOneUser()
 {
     User user3(3, "hello");
-    dbAccess->deleteUser(user3);
+    DatabaseAccess::deleteUser(user3);
 }

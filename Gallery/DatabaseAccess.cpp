@@ -550,7 +550,7 @@ void DatabaseAccess::deleteUser(const User& user)
 
 			delete(&album);
 		}
-		
+
 		//delete user tags
 		sqlStatement = "DELETE FROM TAGS WHERE USER_ID = " + std::to_string(user.getId()) + ";";
 		errMessage = nullptr;
@@ -558,8 +558,6 @@ void DatabaseAccess::deleteUser(const User& user)
 		if (res != SQLITE_OK) {
 			throw MyException(errMessage);
 		}
-
-		delete(&user);
 	}
 	else
 	{

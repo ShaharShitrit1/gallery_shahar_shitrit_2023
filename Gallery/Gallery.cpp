@@ -2,6 +2,7 @@
 #include <string>
 #include "DatabaseAccess.h"
 #include "AlbumManager.h"
+#include "DataAccessTest.h"
 
 
 int getCommandNumberFromUser()
@@ -41,6 +42,13 @@ int main(void)
 {
 	// initialization data access
 	DatabaseAccess dataAccess;
+
+	//Test
+	/*DataAccessTest Test;
+	Test.opendb();
+	Test.AddThreeUsers();
+	Test.UpdateOneUser();
+	Test.DeleteOneUser();*/
 
 	// initialize album manager
 	AlbumManager albumManager(dataAccess);
