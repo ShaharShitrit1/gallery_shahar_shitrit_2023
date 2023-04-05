@@ -16,6 +16,4 @@ public:
 
 	//delete one of the users
 	bool DeleteOneUser();
-
-
 };

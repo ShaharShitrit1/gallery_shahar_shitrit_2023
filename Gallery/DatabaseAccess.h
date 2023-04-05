@@ -52,6 +52,7 @@ public:
 
 	//HELP
 	Picture getPictureFromID(const int picture_id);
+	sqlite3* getDB();
 
 private:
 	sqlite3* db;
