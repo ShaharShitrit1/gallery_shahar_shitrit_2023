@@ -5,25 +5,21 @@
 #include "AlbumNotOpenException.h"
 #include <windows.h>
 
-HANDLE g_paintProcessHandle = nullptr;
+PROCESS_INFORMATION pi = { 0 };
 
-// Handler function to close the Paint process when the user types Ctrl+C
-BOOL WINAPI ConsoleCtrlHandler(DWORD dwCtrlType)
+// Handler function to close the process when the user types Ctrl+C
+BOOL CtrlHandler(DWORD fdwCtrlType) 
 {
-	if (dwCtrlType == CTRL_CLOSE_EVENT && g_paintProcessHandle != nullptr)
+	static bool isCtrlCReceived = false;
+	switch (fdwCtrlType) 
 	{
-		// Close the Paint process
-		TerminateProcess(g_paintProcessHandle, 0);
-
-		// Reset the global handle to null
-		g_paintProcessHandle = nullptr;
-
-		std::cout << "Paint process closed." << std::endl;
-
+	case CTRL_C_EVENT:
+		CloseHandle(pi.hThread);
+		CloseHandle(pi.hProcess);
 		return TRUE;
+	default:
+		return FALSE;
 	}
-
-	return FALSE;
 }
 
 AlbumManager::AlbumManager(IDataAccess& dataAccess) :
@@ -224,33 +220,24 @@ void AlbumManager::showPictureInPaint(Picture pic)
 	swprintf_s(commandLine, L"\"%s\" \"%s\"", paintPath, filePath);
 
 	// Start Paint with the picture file as an argument
-	STARTUPINFO startupInfo = { sizeof(startupInfo) };
-	PROCESS_INFORMATION processInfo;
-	if (!CreateProcessW(paintPath,
-		commandLine,
-		NULL,
-		NULL,
-		FALSE,
-		0,
-		NULL,
-		NULL,
-		(LPSTARTUPINFOW)&startupInfo,
-		&processInfo))
+	STARTUPINFO si = { 0 };
+	si.cb = sizeof(STARTUPINFO);
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = true;
+	pi = { 0 };
+	if (!CreateProcessW(paintPath, commandLine, NULL, NULL, FALSE, 0, NULL, NULL, (LPSTARTUPINFOW)&si, &pi))
 	{
 		MessageBoxW(NULL, L"Failed to start Paint.", L"Error", MB_OK | MB_ICONERROR);
 	}
 	else
 	{
-		if (!SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE))
-		{
-			std::cerr << "Failed to register console control handler.\n";
-		}
+		SetConsoleCtrlHandler((PHANDLER_ROUTINE)CtrlHandler, TRUE);
 
-		// Wait for Paint to exit
-		WaitForSingleObject(processInfo.hProcess, INFINITE);
+		WaitForSingleObject(pi.hProcess, INFINITE);
 
 		// Close the process and thread handles
-		CloseHandle(processInfo.hProcess);
+		CloseHandle(pi.hThread);
+		CloseHandle(pi.hProcess);
 	}
 }
 
@@ -260,41 +247,32 @@ void AlbumManager::showPictureInIrfanview(Picture pic)
 	std::wstring wideStr(path.begin(), path.end());  // Convert to a wide string
 	const wchar_t* filePath = wideStr.c_str();
 
-	// The path to the Paint executable
-	const wchar_t* paintPath = L"C:\\Program Files\\IrfanView\\i_view64.exe";
+	// The path to the IrfanView executable
+	const wchar_t* irfanviewPath = L"C:\\Program Files\\IrfanView\\i_view64.exe";
 
-	// Create the command-line arguments to open the file with Paint
+	// Create the command-line arguments to open the file with IrfanView
 	wchar_t commandLine[MAX_PATH + 32] = { 0 };
-	swprintf_s(commandLine, L"\"%s\" \"%s\"", paintPath, filePath);
+	swprintf_s(commandLine, L"\"%s\" \"%s\"", irfanviewPath, filePath);
 
-	// Start Paint with the picture file as an argument
-	STARTUPINFO startupInfo = { sizeof(startupInfo) };
-	PROCESS_INFORMATION processInfo;
-	if (!CreateProcessW(paintPath,
-		commandLine,
-		NULL,
-		NULL,
-		FALSE,
-		0,
-		NULL,
-		NULL,
-		(LPSTARTUPINFOW)&startupInfo,
-		&processInfo))
+	// Start IrfanView with the picture file as an argument
+	STARTUPINFO si = { 0 };
+	si.cb = sizeof(STARTUPINFO);
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = true;
+	pi = { 0 };
+	if (!CreateProcessW(irfanviewPath, commandLine, NULL, NULL, FALSE, 0, NULL, NULL, (LPSTARTUPINFOW)&si, &pi))
 	{
-		MessageBoxW(NULL, L"Failed to start Paint.", L"Error", MB_OK | MB_ICONERROR);
+		MessageBoxW(NULL, L"Failed to start IrfanView.", L"Error", MB_OK | MB_ICONERROR);
 	}
 	else
 	{
-		if (!SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE))
-		{
-			std::cerr << "Failed to register console control handler.\n";
-		}
+		SetConsoleCtrlHandler((PHANDLER_ROUTINE)CtrlHandler, TRUE);
 
-		// Wait for Paint to exit
-		WaitForSingleObject(processInfo.hProcess, INFINITE);
+		WaitForSingleObject(pi.hProcess, INFINITE);
 
 		// Close the process and thread handles
-		CloseHandle(processInfo.hProcess);
+		CloseHandle(pi.hThread);
+		CloseHandle(pi.hProcess);
 	}
 }
 

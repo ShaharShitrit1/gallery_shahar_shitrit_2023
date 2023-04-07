@@ -414,7 +414,7 @@ Album DatabaseAccess::openAlbum(const std::string& albumName)
 
 void DatabaseAccess::closeAlbum(Album& pAlbum)
 {
-	delete(&pAlbum);
+	// basically here we would like to delete the allocated memory we got from openAlbum
 }
 
 void DatabaseAccess::printAlbums()
