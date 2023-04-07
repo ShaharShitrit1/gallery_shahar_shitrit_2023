@@ -10,12 +10,10 @@ PROCESS_INFORMATION pi = { 0 };
 // Handler function to close the process when the user types Ctrl+C
 BOOL CtrlHandler(DWORD fdwCtrlType) 
 {
-	static bool isCtrlCReceived = false;
 	switch (fdwCtrlType) 
 	{
 	case CTRL_C_EVENT:
-		CloseHandle(pi.hThread);
-		CloseHandle(pi.hProcess);
+		TerminateProcess(pi.hProcess, 0);
 		return TRUE;
 	default:
 		return FALSE;
@@ -290,14 +288,16 @@ void AlbumManager::showPicture()
 		throw MyException("Error: Can't open <" + picName+ "> since it doesnt exist on disk.\n");
 	}
 
-	std::cout << "ENTER 1 to see the picture in paint\nENTER 2 to see the picture in irfanview" << std::endl;
+	std::cout << "1 <-> paint\n2 <-> irfanview" << std::endl;
 	std::string procNum = getInputFromConsole("Enter (1/2): ");
 	if (procNum == "1")
 	{
+		std::cout << "\nThe picture is now showing in Paint\nENTER Ctrl+C if you want to close the photo(make sure you in the console)" << std::endl;
 		showPictureInPaint(pic);
 	}
 	else if (procNum == "2")
 	{
+		std::cout << "\nThe picture is now showing in Irfanview\nENTER Ctrl+C if you want to close the photo(make sure you in the console)" << std::endl;
 		showPictureInIrfanview(pic);
 	}
 	else
