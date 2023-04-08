@@ -306,6 +306,59 @@ void AlbumManager::showPicture()
 	}
 }
 
+void setFilePermission(LPCSTR filepath, int mode)
+{
+	DWORD fileAttributes = GetFileAttributes(filepath);
+	if (fileAttributes == INVALID_FILE_ATTRIBUTES) 
+	{
+		std::cerr << "Failed to get file attributes." << std::endl;
+		return;
+	}
+
+	if (mode == 1) 
+	{
+		// set the file to read-only
+		fileAttributes |= FILE_ATTRIBUTE_READONLY;
+	}
+	else if (mode == 2) 
+	{
+		// set the file to read and write by removing read-only
+		fileAttributes &= ~FILE_ATTRIBUTE_READONLY;
+	}
+	else 
+	{
+		std::cerr << "Invalid mode argument.{Wrong Input}" << std::endl;
+		return;
+	}
+
+	if (!SetFileAttributes(filepath, fileAttributes)) 
+	{
+		std::cerr << "Failed to set file attributes." << std::endl;
+		return;
+	}
+
+	std::cout << "File permission changed successfully." << std::endl;
+}
+
+void AlbumManager::changePicPermission()
+{
+	refreshOpenAlbum();
+
+	std::string picName = getInputFromConsole("Enter picture name: ");
+	if (!m_openAlbum.doesPictureExists(picName)) {
+		throw MyException("Error: There is no picture with name <" + picName + ">.\n");
+	}
+
+	auto pic = m_openAlbum.getPicture(picName);
+	if (!fileExistsOnDisk(pic.getPath())) {
+		throw MyException("Error: Can't open <" + picName + "> since it doesnt exist on disk.\n");
+	}
+	
+	std::cout << "1 <-> read-only\n2 <-> read and write" << std::endl;
+	std::string mode = getInputFromConsole("Enter (1/2): ");
+	setFilePermission(pic.getPath().c_str(), stoi(mode));
+}
+
 void AlbumManager::tagUserInPicture()
 {
 	refreshOpenAlbum();
@@ -527,6 +580,7 @@ const std::vector<struct CommandGroup> AlbumManager::m_prompts  = {
 			{ ADD_PICTURE    , "Add picture." },
 			{ REMOVE_PICTURE , "Remove picture." },
 			{ SHOW_PICTURE   , "Show picture." },
+			{ CHANGE_PICTURE_PERMISSION   , "Change picture premission." },
 			{ LIST_PICTURES  , "List pictures." },
 			{ TAG_USER		 , "Tag user." },
 			{ UNTAG_USER	 , "Untag user." },
@@ -570,6 +624,7 @@ const std::map<CommandType, AlbumManager::handler_func_t> AlbumManager::m_comman
 	{ REMOVE_PICTURE, &AlbumManager::removePictureFromAlbum },
 	{ LIST_PICTURES, &AlbumManager::listPicturesInAlbum },
 	{ SHOW_PICTURE, &AlbumManager::showPicture },
+	{ CHANGE_PICTURE_PERMISSION, &AlbumManager::changePicPermission },
 	{ TAG_USER, &AlbumManager::tagUserInPicture, },
 	{ UNTAG_USER, &AlbumManager::untagUserInPicture },
 	{ LIST_TAGS, &AlbumManager::listUserTags },

@@ -38,6 +38,7 @@ private:
 	void showPicture();
 	void showPictureInPaint(Picture pic);
 	void showPictureInIrfanview(Picture pic);
+	void changePicPermission();
 
 	// tags related
 	void tagUserInPicture();
