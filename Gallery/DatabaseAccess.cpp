@@ -221,6 +221,7 @@ int callbackPictureId(void* data, int argc, char** argv, char** azColName)
 	return 0;
 }
 
+
 //HELP
 Picture DatabaseAccess::getPictureFromID(const int picture_id)
 {
