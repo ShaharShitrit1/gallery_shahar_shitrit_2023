@@ -52,6 +52,12 @@ public:
 	//HELP
 	Picture getPictureFromID(const int picture_id);
 	sqlite3* getDB();
+	string returnFirst(const string sqlStatement) const;
+	void executeSQL(const string sqlStatement);
+	Album returnCallbackAlbum(const string sqlStatement);
+	std::list<Album> returnCallbackAlbums(const string sqlStatement);
+	std::list<Picture> returnCallbackPictures(const string sqlStatement);
+	void printSQL(const string sqlStatement);
 
 private:
 	sqlite3* db;
