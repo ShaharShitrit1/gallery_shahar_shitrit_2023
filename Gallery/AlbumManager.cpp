@@ -3,7 +3,22 @@
 #include "Constants.h"
 #include "MyException.h"
 #include "AlbumNotOpenException.h"
+#include <windows.h>
 
+PROCESS_INFORMATION pi = { 0 };
+
+// Handler function to close the process when the user types Ctrl+C
+BOOL CtrlHandler(DWORD fdwCtrlType) 
+{
+	switch (fdwCtrlType) 
+	{
+	case CTRL_C_EVENT:
+		TerminateProcess(pi.hProcess, 0);
+		return TRUE;
+	default:
+		return FALSE;
+	}
+}
 
 AlbumManager::AlbumManager(IDataAccess& dataAccess) :
     m_dataAccess(dataAccess), m_nextPictureId(100), m_nextUserId(200)
@@ -189,6 +204,76 @@ void AlbumManager::listPicturesInAlbum()
 	std::cout << std::endl;
 }
 
+void AlbumManager::showPictureInPaint(Picture pic)
+{
+	std::string path = pic.getPath();
+	std::wstring wideStr(path.begin(), path.end());  // Convert to a wide string
+	const wchar_t* filePath = wideStr.c_str();
+
+	// The path to the Paint executable
+	const wchar_t* paintPath = L"C:\\Users\\test0\\AppData\\Local\\Microsoft\\WindowsApps\\mspaint.exe";
+
+	// Create the command-line arguments to open the file with Paint
+	wchar_t commandLine[MAX_PATH + 32] = { 0 };
+	swprintf_s(commandLine, L"\"%s\" \"%s\"", paintPath, filePath);
+
+	// Start Paint with the picture file as an argument
+	STARTUPINFO si = { 0 };
+	si.cb = sizeof(STARTUPINFO);
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = true;
+	pi = { 0 };
+	if (!CreateProcessW(paintPath, commandLine, NULL, NULL, FALSE, 0, NULL, NULL, (LPSTARTUPINFOW)&si, &pi))
+	{
+		MessageBoxW(NULL, L"Failed to start Paint.", L"Error", MB_OK | MB_ICONERROR);
+	}
+	else
+	{
+		SetConsoleCtrlHandler((PHANDLER_ROUTINE)CtrlHandler, TRUE);
+
+		WaitForSingleObject(pi.hProcess, INFINITE);
+
+		// Close the process and thread handles
+		CloseHandle(pi.hThread);
+		CloseHandle(pi.hProcess);
+	}
+}
+
+void AlbumManager::showPictureInIrfanview(Picture pic)
+{
+	std::string path = pic.getPath();
+	std::wstring wideStr(path.begin(), path.end());  // Convert to a wide string
+	const wchar_t* filePath = wideStr.c_str();
+
+	// The path to the IrfanView executable
+	const wchar_t* irfanviewPath = L"C:\\Program Files\\IrfanView\\i_view64.exe";
+
+	// Create the command-line arguments to open the file with IrfanView
+	wchar_t commandLine[MAX_PATH + 32] = { 0 };
+	swprintf_s(commandLine, L"\"%s\" \"%s\"", irfanviewPath, filePath);
+
+	// Start IrfanView with the picture file as an argument
+	STARTUPINFO si = { 0 };
+	si.cb = sizeof(STARTUPINFO);
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = true;
+	pi = { 0 };
+	if (!CreateProcessW(irfanviewPath, commandLine, NULL, NULL, FALSE, 0, NULL, NULL, (LPSTARTUPINFOW)&si, &pi))
+	{
+		MessageBoxW(NULL, L"Failed to start IrfanView.", L"Error", MB_OK | MB_ICONERROR);
+	}
+	else
+	{
+		SetConsoleCtrlHandler((PHANDLER_ROUTINE)CtrlHandler, TRUE);
+
+		WaitForSingleObject(pi.hProcess, INFINITE);
+
+		// Close the process and thread handles
+		CloseHandle(pi.hThread);
+		CloseHandle(pi.hProcess);
+	}
+}
+
 void AlbumManager::showPicture()
 {
 	refreshOpenAlbum();
@@ -203,10 +288,75 @@ void AlbumManager::showPicture()
 		throw MyException("Error: Can't open <" + picName+ "> since it doesnt exist on disk.\n");
 	}
 
-	// Bad practice!!!
-	// Can lead to privileges escalation
-	// You will replace it on WinApi Lab(bonus)
-	system(pic.getPath().c_str()); 
+	std::cout << "1 <-> paint\n2 <-> irfanview" << std::endl;
+	std::string procNum = getInputFromConsole("Enter (1/2): ");
+	if (procNum == "1")
+	{
+		std::cout << "\nThe picture is now showing in Paint\nENTER Ctrl+C if you want to close the photo(make sure you in the console)" << std::endl;
+		showPictureInPaint(pic);
+	}
+	else if (procNum == "2")
+	{
+		std::cout << "\nThe picture is now showing in Irfanview\nENTER Ctrl+C if you want to close the photo(make sure you in the console)" << std::endl;
+		showPictureInIrfanview(pic);
+	}
+	else
+	{
+		std::cout << "Error: Wrong Input" << std::endl;
+	}
+}
+
+void setFilePermission(LPCSTR filepath, int mode)
+{
+	DWORD fileAttributes = GetFileAttributes(filepath);
+	if (fileAttributes == INVALID_FILE_ATTRIBUTES) 
+	{
+		std::cerr << "Failed to get file attributes." << std::endl;
+		return;
+	}
+
+	if (mode == 1) 
+	{
+		// set the file to read-only
+		fileAttributes |= FILE_ATTRIBUTE_READONLY;
+	}
+	else if (mode == 2) 
+	{
+		// set the file to read and write by removing read-only
+		fileAttributes &= ~FILE_ATTRIBUTE_READONLY;
+	}
+	else 
+	{
+		std::cerr << "Invalid mode argument.{Wrong Input}" << std::endl;
+		return;
+	}
+
+	if (!SetFileAttributes(filepath, fileAttributes)) 
+	{
+		std::cerr << "Failed to set file attributes." << std::endl;
+		return;
+	}
+
+	std::cout << "File permission changed successfully." << std::endl;
+}
+
+void AlbumManager::changePicPermission()
+{
+	refreshOpenAlbum();
+
+	std::string picName = getInputFromConsole("Enter picture name: ");
+	if (!m_openAlbum.doesPictureExists(picName)) {
+		throw MyException("Error: There is no picture with name <" + picName + ">.\n");
+	}
+
+	auto pic = m_openAlbum.getPicture(picName);
+	if (!fileExistsOnDisk(pic.getPath())) {
+		throw MyException("Error: Can't open <" + picName + "> since it doesnt exist on disk.\n");
+	}
+	
+	std::cout << "1 <-> read-only\n2 <-> read and write" << std::endl;
+	std::string mode = getInputFromConsole("Enter (1/2): ");
+	setFilePermission(pic.getPath().c_str(), stoi(mode));
 }
 
 void AlbumManager::tagUserInPicture()
@@ -430,6 +580,7 @@ const std::vector<struct CommandGroup> AlbumManager::m_prompts  = {
 			{ ADD_PICTURE    , "Add picture." },
 			{ REMOVE_PICTURE , "Remove picture." },
 			{ SHOW_PICTURE   , "Show picture." },
+			{ CHANGE_PICTURE_PERMISSION   , "Change picture premission." },
 			{ LIST_PICTURES  , "List pictures." },
 			{ TAG_USER		 , "Tag user." },
 			{ UNTAG_USER	 , "Untag user." },
@@ -473,6 +624,7 @@ const std::map<CommandType, AlbumManager::handler_func_t> AlbumManager::m_comman
 	{ REMOVE_PICTURE, &AlbumManager::removePictureFromAlbum },
 	{ LIST_PICTURES, &AlbumManager::listPicturesInAlbum },
 	{ SHOW_PICTURE, &AlbumManager::showPicture },
+	{ CHANGE_PICTURE_PERMISSION, &AlbumManager::changePicPermission },
 	{ TAG_USER, &AlbumManager::tagUserInPicture, },
 	{ UNTAG_USER, &AlbumManager::untagUserInPicture },
 	{ LIST_TAGS, &AlbumManager::listUserTags },

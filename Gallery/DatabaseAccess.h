@@ -1,12 +1,11 @@
 #pragma once
 #include "IDataAccess.h"
 #include "sqlite3.h"
-
 #include <io.h>
 
 using std::string;
 
-class DatabaseAccess : public IDataAccess
+class DatabaseAccess : public IDataAccess 
 {
 public:
 	DatabaseAccess() = default;
@@ -56,5 +55,4 @@ public:
 
 private:
 	sqlite3* db;
-
 };
