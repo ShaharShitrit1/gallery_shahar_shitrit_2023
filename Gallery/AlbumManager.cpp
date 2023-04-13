@@ -5,6 +5,11 @@
 #include "AlbumNotOpenException.h"
 #include <windows.h>
 
+#define MSPAINT_PATH "C:\\Users\\test0\\AppData\\Local\\Microsoft\\WindowsApps\\mspaint.exe"	
+#define IRFANV_PATH "C:\\Program Files\\IrfanView\\i_view64.exe"
+#define MSPAINT "1"
+#define IRFANV "2"
+
 PROCESS_INFORMATION pi = { 0 };
 
 // Handler function to close the process when the user types Ctrl+C
@@ -204,53 +209,10 @@ void AlbumManager::listPicturesInAlbum()
 	std::cout << std::endl;
 }
 
-void AlbumManager::showPictureInPaint(Picture pic)
+void AlbumManager::showPictureInProgram(Picture pic, std::string programPath)
 {
-	std::string path = pic.getPath();
-	std::wstring wideStr(path.begin(), path.end());  // Convert to a wide string
-	const wchar_t* filePath = wideStr.c_str();
-
-	// The path to the Paint executable
-	const wchar_t* paintPath = L"C:\\Users\\test0\\AppData\\Local\\Microsoft\\WindowsApps\\mspaint.exe";
-
-	// Create the command-line arguments to open the file with Paint
-	wchar_t commandLine[MAX_PATH + 32] = { 0 };
-	swprintf_s(commandLine, L"\"%s\" \"%s\"", paintPath, filePath);
-
-	// Start Paint with the picture file as an argument
-	STARTUPINFO si = { 0 };
-	si.cb = sizeof(STARTUPINFO);
-	si.dwFlags = STARTF_USESHOWWINDOW;
-	si.wShowWindow = true;
-	pi = { 0 };
-	if (!CreateProcessW(paintPath, commandLine, NULL, NULL, FALSE, 0, NULL, NULL, (LPSTARTUPINFOW)&si, &pi))
-	{
-		MessageBoxW(NULL, L"Failed to start Paint.", L"Error", MB_OK | MB_ICONERROR);
-	}
-	else
-	{
-		SetConsoleCtrlHandler((PHANDLER_ROUTINE)CtrlHandler, TRUE);
-
-		WaitForSingleObject(pi.hProcess, INFINITE);
-
-		// Close the process and thread handles
-		CloseHandle(pi.hThread);
-		CloseHandle(pi.hProcess);
-	}
-}
-
-void AlbumManager::showPictureInIrfanview(Picture pic)
-{
-	std::string path = pic.getPath();
-	std::wstring wideStr(path.begin(), path.end());  // Convert to a wide string
-	const wchar_t* filePath = wideStr.c_str();
-
-	// The path to the IrfanView executable
-	const wchar_t* irfanviewPath = L"C:\\Program Files\\IrfanView\\i_view64.exe";
-
-	// Create the command-line arguments to open the file with IrfanView
-	wchar_t commandLine[MAX_PATH + 32] = { 0 };
-	swprintf_s(commandLine, L"\"%s\" \"%s\"", irfanviewPath, filePath);
+	std::string picPathStr = " " + pic.getPath();
+	PSTR picPath = (PSTR)(picPathStr.c_str());
 
 	// Start IrfanView with the picture file as an argument
 	STARTUPINFO si = { 0 };
@@ -258,7 +220,7 @@ void AlbumManager::showPictureInIrfanview(Picture pic)
 	si.dwFlags = STARTF_USESHOWWINDOW;
 	si.wShowWindow = true;
 	pi = { 0 };
-	if (!CreateProcessW(irfanviewPath, commandLine, NULL, NULL, FALSE, 0, NULL, NULL, (LPSTARTUPINFOW)&si, &pi))
+	if (!CreateProcess(programPath.c_str(), picPath, NULL, NULL, FALSE, 0, NULL, NULL, (LPSTARTUPINFOA)&si, &pi))
 	{
 		MessageBoxW(NULL, L"Failed to start IrfanView.", L"Error", MB_OK | MB_ICONERROR);
 	}
@@ -290,15 +252,15 @@ void AlbumManager::showPicture()
 
 	std::cout << "1 <-> paint\n2 <-> irfanview" << std::endl;
 	std::string procNum = getInputFromConsole("Enter (1/2): ");
-	if (procNum == "1")
+	if (procNum == MSPAINT)
 	{
 		std::cout << "\nThe picture is now showing in Paint\nENTER Ctrl+C if you want to close the photo(make sure you in the console)" << std::endl;
-		showPictureInPaint(pic);
+		showPictureInProgram(pic, MSPAINT_PATH);
 	}
-	else if (procNum == "2")
+	else if (procNum == IRFANV)
 	{
 		std::cout << "\nThe picture is now showing in Irfanview\nENTER Ctrl+C if you want to close the photo(make sure you in the console)" << std::endl;
-		showPictureInIrfanview(pic);
+		showPictureInProgram(pic, IRFANV_PATH);
 	}
 	else
 	{
@@ -375,7 +337,7 @@ void AlbumManager::tagUserInPicture()
 	if ( !m_dataAccess.doesUserExists(userId) ) {
 		throw MyException("Error: There is no user with id @" + userIdStr + "\n");
 	}
-	User user = m_dataAccess.getUser(userId);
+	User user = m_dataAccess.getUser(userId); 
 
 	m_dataAccess.tagUserInPicture(m_openAlbum.getName(), pic.getName(), user.getId());
 	std::cout << "User @" << userIdStr << " successfully tagged in picture <" << pic.getName() << "> in album [" << m_openAlbum.getName() << "]" << std::endl;
@@ -421,7 +383,7 @@ void AlbumManager::listUserTags()
 	const std::set<int> users = pic.getUserTags();
 
 	if ( 0 == users.size() )  {
-		throw MyException("Error: There is no user tegged in <" + picName + ">.\n");
+		throw MyException("Error: There is no user tagged in <" + picName + ">.\n");
 	}
 
 	std::cout << "Tagged users in picture <" << picName << ">:" << std::endl;
@@ -444,7 +406,6 @@ void AlbumManager::addUser()
 	m_dataAccess.createUser(user);
 	std::cout << "User " << name << " with id @" << user.getId() << " created successfully." << std::endl;
 }
-
 
 void AlbumManager::removeUser()
 {
@@ -482,7 +443,7 @@ void AlbumManager::userStatistics()
 		"  + Count of Albums User Owns: " << m_dataAccess.countAlbumsOwnedOfUser(user) << std::endl <<
 		"  + Count of Albums Tagged: " << m_dataAccess.countAlbumsTaggedOfUser(user) << std::endl <<
 		"  + Count of Tags: " << m_dataAccess.countTagsOfUser(user) << std::endl <<
-		"  + Avarage Tags per Alboum: " << m_dataAccess.averageTagsPerAlbumOfUser(user) << std::endl;
+		"  + Avarage Tags per Album: " << m_dataAccess.averageTagsPerAlbumOfUser(user) << std::endl;
 }
 
 
@@ -531,6 +492,11 @@ void AlbumManager::help()
 {
 	system("CLS");
 	printHelp();
+}
+
+void AlbumManager::helpCreate()
+{
+	m_dataAccess.addTwoUsers();
 }
 
 std::string AlbumManager::getInputFromConsole(const std::string& message)
@@ -608,6 +574,7 @@ const std::vector<struct CommandGroup> AlbumManager::m_prompts  = {
 		"Supported Operations:",
 		{
 			{ HELP , "Help (clean screen)" },
+			{ CREATE_HELP , "Help (Open Two new users)" },
 			{ EXIT , "Exit." },
 		}
 	}
@@ -636,5 +603,6 @@ const std::map<CommandType, AlbumManager::handler_func_t> AlbumManager::m_comman
 	{ TOP_TAGGED_PICTURE, &AlbumManager::topTaggedPicture },
 	{ PICTURES_TAGGED_USER, &AlbumManager::picturesTaggedUser },
 	{ HELP, &AlbumManager::help },
+	{ CREATE_HELP, &AlbumManager::helpCreate },
 	{ EXIT, &AlbumManager::exit }
 };

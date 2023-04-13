@@ -23,6 +23,7 @@ private:
 	Album m_openAlbum;
 
 	void help();
+	void helpCreate();
 	// albums management
 	void createAlbum();
 	void openAlbum();
@@ -36,8 +37,7 @@ private:
 	void removePictureFromAlbum();
 	void listPicturesInAlbum();
 	void showPicture();
-	void showPictureInPaint(Picture pic);
-	void showPictureInIrfanview(Picture pic);
+	void showPictureInProgram(Picture pic, std::string programPath);
 	void changePicPermission();
 
 	// tags related

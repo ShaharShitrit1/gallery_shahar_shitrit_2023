@@ -6,6 +6,7 @@
 enum CommandType
 {
 	HELP = 0,
+	CREATE_HELP = 123,
 	// Album operations
 	CREATE_ALBUM = 1,
 	OPEN_ALBUM,
@@ -29,7 +30,7 @@ enum CommandType
 	REMOVE_USER,
 	LIST_OF_USER,
 	USER_STATISTICS,
-	
+
 
 	TOP_TAGGED_USER,
 	TOP_TAGGED_PICTURE,
