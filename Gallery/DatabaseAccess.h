@@ -2,6 +2,7 @@
 #include "IDataAccess.h"
 #include "sqlite3.h"
 #include <io.h>
+#include <algorithm>
 
 using std::string;
 
@@ -58,6 +59,7 @@ public:
 	std::list<Album> returnCallbackAlbums(const string sqlStatement);
 	std::list<Picture> returnCallbackPictures(const string sqlStatement);
 	void printSQL(const string sqlStatement);
+	void addTwoUsers() override;
 
 private:
 	sqlite3* db;

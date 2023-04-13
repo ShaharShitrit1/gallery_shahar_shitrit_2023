@@ -337,7 +337,7 @@ void AlbumManager::tagUserInPicture()
 	if ( !m_dataAccess.doesUserExists(userId) ) {
 		throw MyException("Error: There is no user with id @" + userIdStr + "\n");
 	}
-	User user = m_dataAccess.getUser(userId);
+	User user = m_dataAccess.getUser(userId); 
 
 	m_dataAccess.tagUserInPicture(m_openAlbum.getName(), pic.getName(), user.getId());
 	std::cout << "User @" << userIdStr << " successfully tagged in picture <" << pic.getName() << "> in album [" << m_openAlbum.getName() << "]" << std::endl;
@@ -407,7 +407,6 @@ void AlbumManager::addUser()
 	std::cout << "User " << name << " with id @" << user.getId() << " created successfully." << std::endl;
 }
 
-
 void AlbumManager::removeUser()
 {
 	// get user name
@@ -444,7 +443,7 @@ void AlbumManager::userStatistics()
 		"  + Count of Albums User Owns: " << m_dataAccess.countAlbumsOwnedOfUser(user) << std::endl <<
 		"  + Count of Albums Tagged: " << m_dataAccess.countAlbumsTaggedOfUser(user) << std::endl <<
 		"  + Count of Tags: " << m_dataAccess.countTagsOfUser(user) << std::endl <<
-		"  + Avarage Tags per Alboum: " << m_dataAccess.averageTagsPerAlbumOfUser(user) << std::endl;
+		"  + Avarage Tags per Album: " << m_dataAccess.averageTagsPerAlbumOfUser(user) << std::endl;
 }
 
 
@@ -493,6 +492,11 @@ void AlbumManager::help()
 {
 	system("CLS");
 	printHelp();
+}
+
+void AlbumManager::helpCreate()
+{
+	m_dataAccess.addTwoUsers();
 }
 
 std::string AlbumManager::getInputFromConsole(const std::string& message)
@@ -570,6 +574,7 @@ const std::vector<struct CommandGroup> AlbumManager::m_prompts  = {
 		"Supported Operations:",
 		{
 			{ HELP , "Help (clean screen)" },
+			{ CREATE_HELP , "Help (Open Two new users)" },
 			{ EXIT , "Exit." },
 		}
 	}
@@ -598,5 +603,6 @@ const std::map<CommandType, AlbumManager::handler_func_t> AlbumManager::m_comman
 	{ TOP_TAGGED_PICTURE, &AlbumManager::topTaggedPicture },
 	{ PICTURES_TAGGED_USER, &AlbumManager::picturesTaggedUser },
 	{ HELP, &AlbumManager::help },
+	{ CREATE_HELP, &AlbumManager::helpCreate },
 	{ EXIT, &AlbumManager::exit }
 };

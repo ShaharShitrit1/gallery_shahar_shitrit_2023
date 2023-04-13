@@ -23,6 +23,7 @@ private:
 	Album m_openAlbum;
 
 	void help();
+	void helpCreate();
 	// albums management
 	void createAlbum();
 	void openAlbum();
